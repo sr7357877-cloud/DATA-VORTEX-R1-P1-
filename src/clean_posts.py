@@ -57,6 +57,7 @@ def _clean_text(series: pd.Series) -> pd.Series:
 
     return series.map(clean_value)
 
+
 def _parse_timestamp(raw: str):
     if raw is None:
         return pd.NaT
