@@ -59,7 +59,17 @@ def _parse_timestamp(raw: str):
 def clean_posts(raw_posts_path: Path = RAW_POSTS, raw_users_path: Path = RAW_USERS) -> tuple[pd.DataFrame, dict]:
     raw = pd.read_csv(raw_posts_path)
     raw_rows = len(raw)
-    valid_user_ids = set(pd.read_csv(raw_users_path)["user_id"].astype(str).str.strip())
+    if not CLEANED_USERS.exists():
+    raise FileNotFoundError(
+        f"Cleaned users file not found: {CLEANED_USERS}. "
+        "Run clean_users.py first."
+    )
+
+valid_user_ids = set(
+    pd.read_csv(CLEANED_USERS)["user_id"]
+    .astype(str)
+    .str.strip()
+)
 
     df = raw.copy()
     df["post_id"] = _clean_text(df["post_id"])
@@ -96,13 +106,21 @@ def clean_posts(raw_posts_path: Path = RAW_POSTS, raw_users_path: Path = RAW_USE
     likes = likes.where(~likes_invalid, imputed_values)
     df["likes"] = likes.round().astype(int)
 
-    # Step 7: shares/comments validation (no imputation needed/observed)
-    shares = pd.to_numeric(df["shares"], errors="coerce")
-    comments = pd.to_numeric(df["comments"], errors="coerce")
-    df["shares_imputed"] = (shares.isna() | (shares < 0)).values
-    df["comments_imputed"] = (comments.isna() | (comments < 0)).values
-    df["shares"] = shares.fillna(0).clip(lower=0).astype(int)
-    df["comments"] = comments.fillna(0).clip(lower=0).astype(int)
+    # Step 7: shares/comments validation
+shares = pd.to_numeric(df["shares"], errors="coerce")
+comments = pd.to_numeric(df["comments"], errors="coerce")
+
+if (shares.isna() | (shares < 0)).any():
+    raise ValueError("Invalid shares values found.")
+
+if (comments.isna() | (comments < 0)).any():
+    raise ValueError("Invalid comments values found.")
+
+df["shares"] = shares.astype(int)
+df["comments"] = comments.astype(int)
+
+df["shares_imputed"] = False
+df["comments_imputed"] = False
 
     # Step 8: total engagement
     df["total_engagement"] = df["likes"] + df["shares"] + df["comments"]
