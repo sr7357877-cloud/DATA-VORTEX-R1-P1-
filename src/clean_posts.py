@@ -25,21 +25,37 @@ Rules implemented (documented in reports/EDA_Report.md):
      True if total_engagement > Q3 + 1.5 * IQR.
 """
 from pathlib import Path
+import html
+import re
 import pandas as pd
 import numpy as np
 
 RAW_POSTS = Path(__file__).resolve().parents[1] / "data" / "raw" / "Social_Engine_Posts_Corrupted.csv"
 RAW_USERS = Path(__file__).resolve().parents[1] / "data" / "raw" / "Social_Engine_Users.csv"
 OUT_PATH = Path(__file__).resolve().parents[1] / "data" / "cleaned" / "Social_Engine_Posts_Cleaned.csv"
+CLEANED_USERS = Path(__file__).resolve().parents[1] / "data" / "cleaned" / "Social_Engine_Users_Cleaned.csv"
 
 NULL_LIKE_STRINGS = {"", "nan", "none", "null", "n/a", "na"}
 
 
 def _clean_text(series: pd.Series) -> pd.Series:
-    s = series.astype(str).str.strip()
-    normalised = s.str.lower()
-    s = s.mask(normalised.isin(NULL_LIKE_STRINGS))
-    return s.where(series.notna(), other=None).where(~normalised.isin(NULL_LIKE_STRINGS), other=None)
+    def clean_value(value):
+        if pd.isna(value):
+            return None
+
+        value = str(value).strip()
+
+        if value.lower() in NULL_LIKE_STRINGS:
+            return None
+
+        value = html.unescape(value)
+        value = re.sub(r"<br\s*/?>", " ", value, flags=re.IGNORECASE)
+        value = re.sub(r"</?div[^>]*>", " ", value, flags=re.IGNORECASE)
+        value = re.sub(r"\s+", " ", value).strip()
+
+        return value if value else None
+
+    return series.map(clean_value)
 
 
 def _parse_timestamp(raw: str):
@@ -60,17 +76,16 @@ def clean_posts(raw_posts_path: Path = RAW_POSTS, raw_users_path: Path = RAW_USE
     raw = pd.read_csv(raw_posts_path)
     raw_rows = len(raw)
     if not CLEANED_USERS.exists():
-    raise FileNotFoundError(
-        f"Cleaned users file not found: {CLEANED_USERS}. "
-        "Run clean_users.py first."
+        raise FileNotFoundError(
+            f"Cleaned users file not found: {CLEANED_USERS}. "
+            "Run clean_users.py first."
+        )
+
+    valid_user_ids = set(
+        pd.read_csv(CLEANED_USERS)["user_id"]
+        .astype(str)
+        .str.strip()
     )
-
-valid_user_ids = set(
-    pd.read_csv(CLEANED_USERS)["user_id"]
-    .astype(str)
-    .str.strip()
-)
-
     df = raw.copy()
     df["post_id"] = _clean_text(df["post_id"])
     df["user_id"] = _clean_text(df["user_id"])
@@ -107,21 +122,20 @@ valid_user_ids = set(
     df["likes"] = likes.round().astype(int)
 
     # Step 7: shares/comments validation
-shares = pd.to_numeric(df["shares"], errors="coerce")
-comments = pd.to_numeric(df["comments"], errors="coerce")
+    shares = pd.to_numeric(df["shares"], errors="coerce")
+    comments = pd.to_numeric(df["comments"], errors="coerce")
 
-if (shares.isna() | (shares < 0)).any():
-    raise ValueError("Invalid shares values found.")
+    if (shares.isna() | (shares < 0)).any():
+        raise ValueError("Invalid shares values found.")
 
-if (comments.isna() | (comments < 0)).any():
-    raise ValueError("Invalid comments values found.")
+    if (comments.isna() | (comments < 0)).any():
+        raise ValueError("Invalid comments values found.")
 
-df["shares"] = shares.astype(int)
-df["comments"] = comments.astype(int)
+    df["shares"] = shares.astype(int)
+    df["comments"] = comments.astype(int)
 
-df["shares_imputed"] = False
-df["comments_imputed"] = False
-
+    df["shares_imputed"] = False
+    df["comments_imputed"] = False
     # Step 8: total engagement
     df["total_engagement"] = df["likes"] + df["shares"] + df["comments"]
 
