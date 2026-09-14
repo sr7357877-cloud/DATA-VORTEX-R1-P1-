@@ -1,0 +1,96 @@
+{
+  "source": "https://datavortex-social-engine.vercel.app/assets/index-B2FT5USN.js",
+  "generated_by": "src/build_audit.py (runs src/clean_users.py + src/clean_posts.py)",
+  "users": {
+    "raw_rows": 1500,
+    "clean_rows": 1500,
+    "removed_missing_or_duplicate_id": 0,
+    "follower_count_median_used": 24742,
+    "follower_count_imputed": 0,
+    "invalid_account_created_dates": 0
+  },
+  "posts": {
+    "raw_rows": 12360,
+    "clean_rows": 8737,
+    "removed_missing_or_invalid": 3374,
+    "removed_duplicates": 249,
+    "removed_total": 3623,
+    "imputed_engagement": {
+      "likes": 1680,
+      "shares": 0,
+      "comments": 0
+    },
+    "platform_median_likes_used_for_imputation": {
+      "facebook": 2571.0,
+      "instagram": 2492.0,
+      "reddit": 2472.0,
+      "twitter": 2433.5,
+      "youtube": 2526.0
+    },
+    "engagement_outliers_flagged": 0,
+    "engagement_iqr_upper_fence": 8042.5
+  },
+  "platform_summary": [
+    {
+      "platform": "facebook",
+      "posts": 1779,
+      "avg_total_engagement": 4032.75,
+      "median_total_engagement": 4050.0
+    },
+    {
+      "platform": "instagram",
+      "posts": 1704,
+      "avg_total_engagement": 4036.85,
+      "median_total_engagement": 3987.5
+    },
+    {
+      "platform": "reddit",
+      "posts": 1722,
+      "avg_total_engagement": 3956.46,
+      "median_total_engagement": 3957.0
+    },
+    {
+      "platform": "twitter",
+      "posts": 1751,
+      "avg_total_engagement": 3946.79,
+      "median_total_engagement": 3917.0
+    },
+    {
+      "platform": "youtube",
+      "posts": 1781,
+      "avg_total_engagement": 4020.9,
+      "median_total_engagement": 4048.0
+    }
+  ],
+  "monthly_post_volume": {
+    "2024-05": 765,
+    "2024-06": 715,
+    "2024-07": 745,
+    "2024-08": 732,
+    "2024-09": 692,
+    "2024-10": 745,
+    "2024-11": 742,
+    "2024-12": 750,
+    "2025-01": 714,
+    "2025-02": 670,
+    "2025-03": 742,
+    "2025-04": 725
+  },
+  "residual_text_artifacts_in_cleaned_posts": {
+    "<div>": 295,
+    "<br>": 268,
+    "&amp;": 269,
+    "\u00c3\u00a9": 261
+  },
+  "residual_text_artifacts_preserved": true,
+  "residual_text_artifact_decision": "Detected during cleaning and retained because the documented cleaning methodology does not specify HTML/entity or character-encoding normalization as a record-removal criterion.",
+  "validation": {
+    "cleaned_users_duplicate_user_ids": 0,
+    "cleaned_posts_duplicate_post_ids": 0,
+    "cleaned_posts_missing_values_total": 0,
+    "cleaned_posts_negative_likes": 0,
+    "cleaned_posts_negative_shares": 0,
+    "cleaned_posts_negative_comments": 0,
+    "engagement_calculation_mismatches": 0
+  }
+}
