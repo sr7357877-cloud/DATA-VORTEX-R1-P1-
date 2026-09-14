@@ -58,13 +58,15 @@ Or open `notebooks/Cleaning_and_Validation.ipynb` and run all cells, which does 
 | Dataset | Raw | Clean | Removed |
 |---|---:|---:|---:|
 | Users | 1,500 | 1,500 | 0 |
-| Posts | 12,360 | 8,737 | 3,623 |
+| Posts | 12,360 | 8,712 | 3,648 |
 
-The cleaning audit records 1,680 likes imputations (missing or negative values, per-platform median) and no shares/comments imputations. See `reports/EDA_Report.md` for the full methodology.
+The cleaning audit records 1,673 likes imputations (missing or negative values, using per-platform medians) and no shares/comments imputations. See `reports/EDA_Report.md` for the full methodology and results.
 
 ## Residual text artifacts
 
-The final cleaned post dataset retains documented residual text artifacts (`<div>`, `<br>`, `&amp;`, and `Ã©`). They were detected during cleaning and preserved rather than silently altered because the documented cleaning methodology treats structural completeness — not HTML/entity or character-encoding normalization — as the removal criterion. Counts are recorded in `audit/cleaning_summary.json` and `reports/EDA_Report.md`.
+The cleaning pipeline removes HTML tags and HTML entities from post text. The current cleaned dataset contains 0 remaining occurrences of `<div>`, `<br>`, and `&amp;`.
+
+A character-encoding artifact, `Ã©`, remains in 261 records. These records were retained because the documented cleaning methodology does not remove otherwise structurally valid records solely because of character-encoding anomalies. This is documented as a limitation for downstream text analysis.
 
 ## Assumptions and limitations
 
