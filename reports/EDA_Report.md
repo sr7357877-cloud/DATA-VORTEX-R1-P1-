@@ -3,68 +3,143 @@
 ## Deliverables
 
 - `Social_Engine_Users_Cleaned.csv`: 1,500 cleaned user records.
-- `Social_Engine_Posts_Cleaned.csv`: 8,737 cleaned post records.
+- `Social_Engine_Posts_Cleaned.csv`: 8,712 cleaned post records.
 - `cleaning_summary.json`: machine-readable cleaning log and summary metrics, generated directly by `src/build_audit.py`.
 
-All figures in this report are produced by running `src/clean_users.py` and `src/clean_posts.py` on the raw files in `data/raw/` — none are hand-entered. Re-running the pipeline (`python src/build_audit.py`, or `notebooks/Cleaning_and_Validation.ipynb`) reproduces every number below.
+All figures in this report are generated from the current cleaning pipeline and audit output. Re-running the pipeline reproduces the reported cleaning and validation metrics.
 
 ## Cleaning method
 
-The source data was recovered from the Dataset 01 files exposed by the corrupted Social Engine site. User IDs and post IDs were treated as unique identifiers. Whitespace was trimmed on text fields, null-like values (`NULL`, `None`, `N/A`, and blank fields) were converted to missing values, and platform and language labels were standardised to lowercase.
+The source data was recovered from the Dataset 01 files exposed by the Social Engine site. User IDs and post IDs were treated as unique identifiers. Whitespace was trimmed on text fields, null-like values (`NULL`, `None`, `N/A`, and blank fields) were converted to missing values, and platform labels were standardised to lowercase.
 
-Post timestamps were accepted in three raw formats — `DD-MM-YYYY`, Unix epoch seconds, and ISO 8601 — and normalised to ISO 8601 at midnight UTC. Posts missing a usable post ID, a user ID that exists in the cleaned users table, a platform, non-empty text, or a parseable timestamp were excluded as structurally invalid. Among the remaining valid rows, duplicate post IDs were resolved by keeping the most complete remaining row for that ID.
+Post timestamps were accepted in three raw formats — `DD-MM-YYYY`, Unix epoch seconds, and ISO 8601 — and normalised to UTC midnight. Posts missing a usable post ID, a user ID that exists in the cleaned users table, a platform, non-empty text, or a parseable timestamp were excluded as structurally invalid. Among the remaining valid rows, duplicate post IDs were resolved by keeping the most complete remaining row for that ID.
 
-Likes were treated as invalid if missing **or negative** (a negative like count is not a valid observation), and were imputed with the per-platform median of valid likes among the cleaned rows; the imputation is disclosed per-row in `likes_imputed`. Shares and comments were validated as non-negative; the raw data contained no negative or missing values for these two fields, so no imputation was required (`shares_imputed` / `comments_imputed` are retained as columns for schema consistency but are always `False`).
+Likes were treated as invalid if missing or negative and were imputed using the per-platform median of valid likes. The imputation is disclosed per-row in `likes_imputed`. Shares and comments were validated as non-negative. No invalid shares or comments required imputation.
 
-Engagement was not winsorised or deleted. `total_engagement` is the sum of likes, shares, and comments; `engagement_outlier` flags rows where `total_engagement` exceeds the IQR upper fence (Q3 + 1.5×IQR), computed from the cleaned data.
+Engagement was not winsorised or deleted. `total_engagement` is the sum of likes, shares, and comments. `engagement_outlier` flags rows where `total_engagement` exceeds the IQR upper fence (Q3 + 1.5×IQR), calculated from the cleaned data.
 
 ## Data quality results
 
 | Measure | Users | Posts |
 | --- | ---: | ---: |
 | Raw records | 1,500 | 12,360 |
-| Clean records | 1,500 | 8,737 |
-| Removed — structurally invalid (missing platform/text/timestamp/valid user) | 0 | 3,374 |
-| Removed — duplicate post_id (kept most complete row) | 0 | 249 |
-| Total removed | 0 | 3,623 |
+| Clean records | 1,500 | 8,712 |
+| Removed — structurally invalid | 0 | 3,400 |
+| Removed — duplicate post_id | 0 | 248 |
+| Total removed | 0 | 3,648 |
 
-Of the 3,374 structural exclusions, the dominant causes are missing platform labels and missing/null-like text content in the raw source. The raw post file contains 12,360 rows and 12,000 unique post IDs (360 rows are excess copies of an already-seen post_id); after structural filtering, 249 of the remaining rows were still duplicates of an ID already present and were dropped in favor of the most complete version of that record.
+The 3,400 structurally invalid post records were excluded because they failed one or more required structural checks. Duplicate post IDs were then resolved by retaining the most complete valid record.
 
-8,737 clean posts remain. Of these, 1,680 had a missing or negative likes value; those values were imputed using each platform's median likes (facebook 2,571; instagram 2,492; reddit 2,472; twitter 2,433.5; youtube 2,526). No user follower counts required imputation — the raw users file contained no missing or negative follower counts.
+Of the 8,712 cleaned posts, 1,673 had missing or negative likes values and received platform-level median imputation.
 
-## Residual text anomalies
+Platform medians used for likes imputation were:
 
-Validation of the final cleaned post dataset identified several recurring text artifacts: HTML-like fragments (`<div>`, `<br>`), the HTML entity `&amp;`, and the encoding artifact `Ã©`. These affected records were retained because the documented cleaning methodology treats structural completeness (valid ID, platform, non-empty text, parseable timestamp) as the removal criterion, not HTML/entity decoding or character-encoding normalization. They are documented here as a residual data-quality limitation for downstream text analysis, not silently altered.
+| Platform | Median likes |
+| --- | ---: |
+| Facebook | 2,571.0 |
+| Instagram | 2,493.5 |
+| Reddit | 2,471.0 |
+| Twitter | 2,417.0 |
+| YouTube | 2,525.0 |
+
+No shares or comments values required imputation.
+
+## Residual text artifacts
+
+HTML and HTML-entity artifacts were cleaned from the post text during processing. The current audit reports zero remaining occurrences of `<div>`, `<br>`, and `&amp;`.
+
+One character-encoding artifact, `Ã©`, remains in 261 cleaned records. These records were retained because the current cleaning methodology does not remove otherwise structurally valid records solely because of character-encoding anomalies.
 
 | Artifact | Records in cleaned posts |
 | --- | ---: |
-| `<div>` | 295 |
-| `<br>` | 268 |
-| `&amp;` | 269 |
+| `<div>` | 0 |
+| `<br>` | 0 |
+| `&amp;` | 0 |
 | `Ã©` | 261 |
+
+This limitation should be considered if the dataset is later used for detailed text or language analysis.
 
 ## Exploratory findings
 
-- The cleaned post set covers 1 May 2024 through 30 April 2025. May 2024 has the highest volume (765 posts); February 2025 is the lowest (670).
-- Engagement is fairly even across platforms: Instagram has the highest mean total engagement (4,036.85) and Twitter the lowest (3,946.79) — platform alone does not explain much variation in this recovered set.
-- Median total engagement across cleaned posts is 3,994, ranging from 153 to 7,893. No record exceeded the IQR upper fence of 8,042.5, so no engagement outliers were flagged under this rule.
-- The user base is geographically and linguistically diverse. The most frequent language is Chinese (`zh`, 168 users), followed by Hindi and Japanese (156 each), then English (153) and French (150).
-- Follower counts range from 109 to 49,944, with a median of 24,741.5.
+### Post volume
+
+The cleaned post dataset covers **1 May 2024 through 30 April 2025**.
+
+| Month | Posts |
+| --- | ---: |
+| May 2024 | 761 |
+| June 2024 | 713 |
+| July 2024 | 743 |
+| August 2024 | 731 |
+| September 2024 | 689 |
+| October 2024 | 744 |
+| November 2024 | 741 |
+| December 2024 | 746 |
+| January 2025 | 712 |
+| February 2025 | 667 |
+| March 2025 | 741 |
+| April 2025 | 724 |
+
+May 2024 had the highest post volume with 761 posts, while February 2025 had the lowest with 667.
+
+### Platform distribution and engagement
+
+| Platform | Posts | Avg. total engagement | Median total engagement |
+| --- | ---: | ---: | ---: |
+| Facebook | 1,772 | 4,033.13 | 4,050 |
+| Instagram | 1,697 | 4,038.52 | 3,990 |
+| Reddit | 1,719 | 3,955.70 | 3,957 |
+| Twitter | 1,747 | 3,939.95 | 3,906 |
+| YouTube | 1,777 | 4,019.38 | 4,048 |
+
+Instagram has the highest average total engagement at 4,038.52, while Twitter has the lowest at 3,939.95. The relatively small difference suggests that platform alone does not explain most engagement variation in this recovered dataset.
+
+### Engagement distribution
+
+Across all 8,712 cleaned posts:
+
+- Mean total engagement: **3,997.41**
+- Median total engagement: **3,994**
+- Minimum: **153**
+- Maximum: **7,893**
+- IQR upper fence: **8,039**
+- Engagement outliers flagged: **0**
+
+No cleaned post exceeds the calculated IQR upper fence.
+
+### User data
+
+The cleaned user dataset contains 1,500 users.
+
+Follower counts range from **109 to 49,944**, with a median of **24,742**. No follower-count imputation was required.
+
+The most frequent user languages are:
+
+- Chinese (`zh`): 168 users
+- Hindi (`hi`): 156 users
+- Japanese (`ja`): 156 users
+- English (`en`): 153 users
+- French (`fr`): 150 users
 
 ## Validation
 
-`src/validate_submission.py` checks the final cleaned files for: row counts matching the audit, duplicate identifiers, missing values, negative engagement values, engagement-sum consistency, and imputation-flag consistency against `audit/cleaning_summary.json`. All checks currently pass — see the printed output when the script is run, or re-run it from the repository root:
+The final cleaned datasets were checked for:
 
-```bash
-pip install -r requirements.txt
-python src/clean_users.py
-python src/clean_posts.py
-python src/build_audit.py
-python src/validate_submission.py
-```
+- Duplicate user IDs
+- Duplicate post IDs
+- Missing cleaned post values
+- Negative likes, shares, and comments
+- Incorrect engagement calculations
+- Imputation-flag consistency
 
-## Reproducibility and limits
+The current audit reports zero duplicate post IDs, zero missing cleaned-post values, zero negative engagement components, and zero engagement-calculation mismatches.
 
-The cleaning method is implemented in `src/clean_users.py` and `src/clean_posts.py`, orchestrated end to end in `notebooks/Cleaning_and_Validation.ipynb`. The machine-readable audit is generated by `src/build_audit.py` directly from the cleaned dataframes — it is not a separately maintained or hand-edited file. The cleaned post file retains imputation flags so downstream analysis can exclude or separately test imputed engagement values. Values marked as missing or negative in the source are not assumed to mean zero; likes are median-imputed per platform, while incomplete structural records are excluded rather than guessed at.
+## Reproducibility and limitations
 
-The repository preserves the raw source files separately from the cleaned deliverables. Residual text artifacts are explicitly recorded rather than silently altered.
+The cleaning method is implemented in `src/clean_users.py` and `src/clean_posts.py`. The process is orchestrated by `src/build_audit.py`, which generates `audit/cleaning_summary.json` directly from the current cleaned data.
+
+The repository preserves the raw source files separately from the cleaned deliverables.
+
+The cleaned post dataset retains imputation flags so downstream analysis can distinguish original values from imputed likes.
+
+The remaining `Ã©` character-encoding artifact should be considered a limitation for downstream text analysis. It does not affect the structural or numerical validation of the cleaned dataset.

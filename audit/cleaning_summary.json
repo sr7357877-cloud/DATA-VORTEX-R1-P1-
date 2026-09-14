@@ -11,75 +11,75 @@
   },
   "posts": {
     "raw_rows": 12360,
-    "clean_rows": 8737,
-    "removed_missing_or_invalid": 3374,
-    "removed_duplicates": 249,
-    "removed_total": 3623,
+    "clean_rows": 8712,
+    "removed_missing_or_invalid": 3400,
+    "removed_duplicates": 248,
+    "removed_total": 3648,
     "imputed_engagement": {
-      "likes": 1680,
+      "likes": 1673,
       "shares": 0,
       "comments": 0
     },
     "platform_median_likes_used_for_imputation": {
       "facebook": 2571.0,
-      "instagram": 2492.0,
-      "reddit": 2472.0,
-      "twitter": 2433.5,
-      "youtube": 2526.0
+      "instagram": 2493.5,
+      "reddit": 2471.0,
+      "twitter": 2417.0,
+      "youtube": 2525.0
     },
     "engagement_outliers_flagged": 0,
-    "engagement_iqr_upper_fence": 8042.5
+    "engagement_iqr_upper_fence": 8039.0
   },
   "platform_summary": [
     {
       "platform": "facebook",
-      "posts": 1779,
-      "avg_total_engagement": 4032.75,
+      "posts": 1772,
+      "avg_total_engagement": 4033.13,
       "median_total_engagement": 4050.0
     },
     {
       "platform": "instagram",
-      "posts": 1704,
-      "avg_total_engagement": 4036.85,
-      "median_total_engagement": 3987.5
+      "posts": 1697,
+      "avg_total_engagement": 4038.52,
+      "median_total_engagement": 3990.0
     },
     {
       "platform": "reddit",
-      "posts": 1722,
-      "avg_total_engagement": 3956.46,
+      "posts": 1719,
+      "avg_total_engagement": 3955.7,
       "median_total_engagement": 3957.0
     },
     {
       "platform": "twitter",
-      "posts": 1751,
-      "avg_total_engagement": 3946.79,
-      "median_total_engagement": 3917.0
+      "posts": 1747,
+      "avg_total_engagement": 3939.95,
+      "median_total_engagement": 3906.0
     },
     {
       "platform": "youtube",
-      "posts": 1781,
-      "avg_total_engagement": 4020.9,
+      "posts": 1777,
+      "avg_total_engagement": 4019.38,
       "median_total_engagement": 4048.0
     }
   ],
   "monthly_post_volume": {
-    "2024-05": 765,
-    "2024-06": 715,
-    "2024-07": 745,
-    "2024-08": 732,
-    "2024-09": 692,
-    "2024-10": 745,
-    "2024-11": 742,
-    "2024-12": 750,
-    "2025-01": 714,
-    "2025-02": 670,
-    "2025-03": 742,
-    "2025-04": 725
+    "2024-05": 761,
+    "2024-06": 713,
+    "2024-07": 743,
+    "2024-08": 731,
+    "2024-09": 689,
+    "2024-10": 744,
+    "2024-11": 741,
+    "2024-12": 746,
+    "2025-01": 712,
+    "2025-02": 667,
+    "2025-03": 741,
+    "2025-04": 724
   },
   "residual_text_artifacts_in_cleaned_posts": {
-    "<div>": 295,
-    "<br>": 268,
-    "&amp;": 269,
+    "<div>": 0,
+    "<br>": 0,
+    "&amp;": 0,
     "\u00c3\u00a9": 261
   },
   "residual_text_artifacts_preserved": true,
