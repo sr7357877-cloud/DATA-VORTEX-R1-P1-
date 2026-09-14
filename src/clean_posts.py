@@ -45,18 +45,17 @@ def _clean_text(series: pd.Series) -> pd.Series:
 
         value = str(value).strip()
 
-        if value.lower() in NULL_LIKE_STRINGS:
-            return None
-
         value = html.unescape(value)
         value = re.sub(r"<br\s*/?>", " ", value, flags=re.IGNORECASE)
         value = re.sub(r"</?div[^>]*>", " ", value, flags=re.IGNORECASE)
         value = re.sub(r"\s+", " ", value).strip()
 
+        if value.lower() in NULL_LIKE_STRINGS:
+            return None
+
         return value if value else None
 
     return series.map(clean_value)
-
 
 def _parse_timestamp(raw: str):
     if raw is None:
