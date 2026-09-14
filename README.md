@@ -3,7 +3,7 @@
 
 This repository contains the Dataset 01 cleaning pipeline and EDA deliverables for Round 1 Phase 1.
 
-**GitHub repository:** _add your repo URL here after pushing_
+**GitHub repository:** https://github.com/sr7357877-cloud/DATA-VORTEX-R1-P1-
 
 ## Rulebook-aligned deliverables
 
